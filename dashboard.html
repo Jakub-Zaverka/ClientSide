@@ -3,14 +3,240 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="scripts.js"></script>
+    <style>
+        #schedule-viewport {
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .schedule-table {
+            display: flex;
+            flex-direction: column;
+            min-width: 100%;
+        }
+
+        .schedule-row {
+            display: flex;
+            min-width: max-content;
+        }
+
+        .schedule-header {
+            background-color: var(--bs-primary);
+            color: var(--bs-white);
+        }
+
+        .schedule-row:not(.schedule-header) {
+            background-color: var(--bs-body-bg);
+        }
+
+        .schedule-cell {
+            position: relative;
+            min-width: 6rem;
+            padding: 0.5rem;
+            border: 1px solid rgba(0, 0, 0, .1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .schedule-header .schedule-cell {
+            border-color: rgba(255, 255, 255, .3);
+        }
+
+        .schedule-event {
+            position: absolute;
+            top: 15%;
+            bottom: 15%;
+            left: calc(var(--start, 0) * 100%);
+            width: calc(var(--length, 1) * 100%);
+            background: rgba(13, 110, 253, .65);
+            border-radius: 0.4rem;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 0.75rem;
+            pointer-events: none;
+            padding: 0 0.25rem;
+        }
+
+        .schedule-cell-fixed {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            min-width: 11rem;
+            background-color: inherit;
+        }
+
+        .schedule-header .schedule-cell-fixed {
+            z-index: 4;
+        }
+
+        .schedule-cell-fixed button {
+            width: 100%;
+        }
+
+        .schedule-controls {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: var(--bs-body-bg);
+            padding: 0.75rem 0;
+        }
+
+        .schedule-controls button[id^="time"] {
+            z-index: 6;
+        }
+    </style>
 </head>
 
 <body>
-    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#" id="time">24.10.2025 15:15 UTC</a>
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav mb-2 mb-lg-0 gap-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Správa meeting room</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Správa uživatelů</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Změna hesla</a>
+                    </li>
+                </ul>
+                <button class="btn btn-primary mt-3 mt-lg-0 ms-lg-3" type="button">Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-3">
+        <div class="row">
+            <div class="col-2"></div>
+            <div class="col-10">
+                <div class="schedule-controls d-flex align-items-center gap-3">
+                    <div class="flex-grow-1 d-flex justify-content-center align-items-center gap-2">
+                        <button class="btn" type="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-arrow-left-square" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z" />
+                            </svg>
+                        </button>
+                        <p class="mb-0">20.10-27.10</p>
+                        <button class="btn" type="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-arrow-right-square" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd"
+                                    d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm4.5 5.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <ul class="nav nav-underline nav-justified">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Pondělí</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Úterý</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Středa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Čtvrtek</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Pátek</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Sobota</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Neděle</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="schedule-viewport" class="mt-3">
+            <div class="schedule-table">
+                <div class="schedule-row schedule-header">
+                    <div class="schedule-cell schedule-cell-fixed">
+                        <button class="btn btn-info">Rezervovat</button>
+                    </div>
+                    <div class="schedule-cell schedule-cell-time">0:00</div>
+                    <div class="schedule-cell schedule-cell-time">2:00</div>
+                    <div class="schedule-cell schedule-cell-time">4:00</div>
+                    <div class="schedule-cell schedule-cell-time">6:00</div>
+                    <div class="schedule-cell schedule-cell-time">8:00</div>
+                    <div class="schedule-cell schedule-cell-time">10:00</div>
+                    <div class="schedule-cell schedule-cell-time">12:00</div>
+                    <div class="schedule-cell schedule-cell-time">14:00</div>
+                    <div class="schedule-cell schedule-cell-time">16:00</div>
+                    <div class="schedule-cell schedule-cell-time">18:00</div>
+                    <div class="schedule-cell schedule-cell-time">20:00</div>
+                    <div class="schedule-cell schedule-cell-time">22:00</div>
+                    <div class="schedule-cell schedule-cell-time">24:00</div>
+                </div>
+                <!-- 
+                dashboard.html:189-199 demonstruje dvě události: 1:00–1:30 (--start:0.5; --length:0.25) v první buňce a 14:45–15:30 (--start:0.75; --length:0.375) v buňce s časem 14:00. Ta druhá má navíc bg-success, takže je vidět, že barvu můžeš změnit přes bootstrap třídu nebo vlastní styl. -->
+                <!-- Kroky pro tebe: mrkni v prohlížeči, že bloky sedí na očekávaných místech. Pokud budeš chtít vypočítávat --start/--length v JS, stačí je generovat jako poměr k délce buňky (u tebe 2 hodiny) -->
+                <div class="schedule-row">
+                    <div class="schedule-cell schedule-cell-fixed">Meeting Room A</div>
+                    <div class="schedule-cell">
+                        <span class="schedule-event" style="--start: 0.5; --length: 0.25;"></span>
+                    </div>
+                    <div class="schedule-cell"><span class="schedule-event bg-success"
+                            style="--start: 0.9; --length: 0.375;"></span></div>
+                    <div class="schedule-cell"><span class="schedule-event bg-success"
+                            style="--start: -0.1; --length: 0.5;"></span></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                </div>
+                <div class="schedule-row">
+                    <div class="schedule-cell schedule-cell-fixed">Meeting Room B</div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"><span class="schedule-event bg-success"
+                            style="--start: 0.375; --length: 0.375;"></span></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                    <div class="schedule-cell"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

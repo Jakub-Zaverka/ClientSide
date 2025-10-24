@@ -20,3 +20,41 @@ function showPassword(btn) {
           <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>`;
     }
 }
+
+//Hodiny
+function startClock() {
+    const timeEl = document.getElementById('time');
+    if (!timeEl) return;
+
+    const update = () => {
+        const now = new Date();
+        const formatted = now
+            .toLocaleDateString('cs-CZ')
+            .replace(/\s/g, '') + ' ' +
+            now.toLocaleTimeString('cs-CZ', { hour12: false });
+        timeEl.textContent = formatted;
+    };
+
+
+    update();
+    setInterval(update, 1000);
+}
+
+function initScheduleScroll(defaultStep = 120) {
+    const viewport = document.getElementById('schedule-viewport');
+    const prevBtn = document.getElementById('timePrev');
+    const nextBtn = document.getElementById('timeNext');
+    if (!viewport || !prevBtn || !nextBtn) return;
+
+    const slot = viewport.querySelector('.schedule-header .schedule-cell:not(.schedule-cell-fixed)');
+    const step = slot ? slot.offsetWidth : defaultStep;
+    const scroll = direction => viewport.scrollBy({ left: direction * step, behavior: 'smooth' });
+
+    prevBtn.addEventListener('click', () => scroll(-1));
+    nextBtn.addEventListener('click', () => scroll(1));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    startClock();
+    initScheduleScroll();
+});
