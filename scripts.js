@@ -40,6 +40,7 @@ function startClock() {
     setInterval(update, 1000);
 }
 
+//Table scroll
 function initScheduleScroll(defaultStep = 120) {
     const viewport = document.getElementById('schedule-viewport');
     const prevBtn = document.getElementById('timePrev');
@@ -54,7 +55,38 @@ function initScheduleScroll(defaultStep = 120) {
     nextBtn.addEventListener('click', () => scroll(1));
 }
 
+
+
+function scrollScheduleToNow() {
+    const viewport = document.getElementById('schedule-viewport');
+    if (!viewport) return;
+
+    const header = viewport.querySelector('.schedule-header');
+    const firstSlot = header?.querySelector('.schedule-cell:not(.schedule-cell-fixed)');
+    if (!header || !firstSlot) return;
+
+    const stickyWidth = header.querySelector('.schedule-cell-fixed')?.getBoundingClientRect().width ?? 0;
+    const slotWidth = firstSlot.getBoundingClientRect().width;
+
+    const minutesPerSlot = 120;
+    const now = new Date();
+    const minutes = now.getHours() * 60 + now.getMinutes();
+    const fractionalIndex = minutes / minutesPerSlot;
+
+    const manualOffset = slotWidth * 0.1-100; // tady dolaď, kladné posune doprava, záporné doleva
+
+    let target = stickyWidth + fractionalIndex * slotWidth;
+    target -= (viewport.clientWidth - slotWidth) / 2;
+    target += manualOffset;
+
+    viewport.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+}
+
+
+
+//Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     startClock();
     initScheduleScroll();
+    scrollScheduleToNow();
 });
