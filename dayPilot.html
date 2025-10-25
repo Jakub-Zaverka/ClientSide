@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashvoard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <script src="scripts.js"></script>
+  <script src="node_modules\@daypilot\daypilot-lite-javascript\daypilot-javascript.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 2rem;
+      background-color: #f8f9fa;
+    }
+
+    #scheduler {
+      height: 500px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#" id="time">24.10.2025 15:15 UTC</a>
+      <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav mb-2 mb-lg-0 gap-lg-3">
+          <li class="nav-item">
+            <a class="nav-link" href="#">Správa meeting room</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Správa uživatelů</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Změna hesla</a>
+          </li>
+        </ul>
+        <button class="btn btn-primary mt-3 mt-lg-0 ms-lg-3" type="button">Log Out</button>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="card shadow">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Meeting Room Schedule</h5>
+        <button class="btn btn-light btn-sm" id="addMeeting">+ Nový meeting</button>
+      </div>
+      <div class="card-body p-0">
+        <div id="scheduler"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Inicializace DayPilot Scheduleru
+      const dp = new DayPilot.Scheduler("scheduler", {
+        startDate: DayPilot.Date.today(),
+        days: 1,
+        scale: "CellDuration",
+        cellDuration: 60,
+        timeHeaders: [{ groupBy: "Hour", format: "HH:mm" }],
+        businessBeginsHour: 8,
+        businessEndsHour: 18,
+        resources: [
+          { name: "Room A", id: "A" },
+          { name: "Room B", id: "B" },
+          { name: "Room C", id: "C" }
+        ],
+        events: [
+          {
+            id: "1",
+            resource: "A",
+            text: "Morning Meeting",
+            start: DayPilot.Date.today().addHours(9),
+            end: DayPilot.Date.today().addHours(10),
+            backColor: "#0d6efd"
+          },
+          {
+            id: "2",
+            resource: "B",
+            text: "Project Sync",
+            start: DayPilot.Date.today().addHours(11),
+            end: DayPilot.Date.today().addHours(12.5),
+            backColor: "#198754"
+          }
+        ],
+        onTimeRangeSelected: async (args) => {
+          dp.clearSelection();
+          const title = prompt("Zadej název meetingu:");
+          if (!title) return;
+          const newEvent = {
+            id: DayPilot.guid(),
+            resource: args.resource,
+            start: args.start,
+            end: args.end,
+            text: title,
+            backColor: "#ffc107"
+          };
+          dp.events.add(newEvent);
+        }
+      });
+
+      dp.init();
+
+      // Tlačítko „+ Nový meeting“ nahoře
+      document.getElementById("addMeeting").addEventListener("click", () => {
+        const randomRoom = ["A", "B", "C"][Math.floor(Math.random() * 3)];
+        const start = DayPilot.Date.today().addHours(10 + Math.random() * 6);
+        const end = start.addMinutes(30 + Math.random() * 60);
+        dp.events.add({
+          id: DayPilot.guid(),
+          resource: randomRoom,
+          start,
+          end,
+          text: "New Meeting",
+          backColor: "#fd7e14"
+        });
+      });
+    });
+  </script>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
